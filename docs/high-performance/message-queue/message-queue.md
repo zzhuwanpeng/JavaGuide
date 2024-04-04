@@ -1,5 +1,5 @@
 ---
-title: 消息队列基础知识总结
+title: （DONE:内容不多）消息队列基础知识总结
 category: 高性能
 tag:
   - 消息队列
