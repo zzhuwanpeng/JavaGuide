@@ -390,7 +390,7 @@ JVM 这部分内容主要参考 [JVM 虚拟机规范-Java8](https://docs.oracle.
 
 ### 消息队列
 
-- [消息队列基础知识总结](./docs/high-performance/message-queue/message-queue.md)
+- [(DONE,没啥内容)消息队列基础知识总结](./docs/high-performance/message-queue/message-queue.md)
 - [Disruptor 常见知识点&面试题总结](./docs/high-performance/message-queue/disruptor-questions.md)
 - [RabbitMQ 常见知识点&面试题总结](./docs/high-performance/message-queue/rabbitmq-questions.md)
 - [RocketMQ 常见知识点&面试题总结](./docs/high-performance/message-queue/rocketmq-questions.md)
