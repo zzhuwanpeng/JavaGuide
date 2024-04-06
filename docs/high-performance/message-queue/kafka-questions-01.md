@@ -436,10 +436,12 @@ private void customer(String message) {
 ## 问题积累：
 1. 消息积压：
    a. 单partition并行消费的个数”来增加消费能力
-   单partiton并行消费，原理是客户端将消息从broker拉取(consumer-fetch-thread)下来后，将消费逻辑放到一个线程池中进行并行消费(consumer-consume-thread)，所以针对一个partition，拉取是有一个线程，但是拉取下来后消费是多个线程。
-   **单partiton并行消费线程数>=2，则partition内消费不再有序**
+   单partiton并行消费，原理是客户端将消息从broker拉取(consumer-fetch-thread)下来后，将消费逻辑放到一个线程池中进行并行消费(consumer-consume-thread)，所以针对一个partition，拉取是有一个线程，但是拉取下来后消费是多个线程。需要注意的是现线程池有可能存在因为空闲或大任务超时被回收的情况，需要设置executorService.allowedCoreThreadTimeout(true)
+   
+   **单partiton并行消费线程数>=2，则partition内消费不再有序**，
    **如何保证顺序：**：
    	向broker集群回复ack的时候，以连续offset进行回复，具体讲就是最小的如果业务没有回复ack，不进行向broker回复ack，最小的进行了回复ack，递增寻找最大的进行回复。
+        这样做的问题是会造成重复消息：比如1,2,3成功，4,5,6时4失败，则提交offset3，但是5已经被消费过，下次取还是从失败的4开始取。
    b. partition扩容
 
 ## 参考
