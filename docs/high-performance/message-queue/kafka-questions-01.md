@@ -433,6 +433,15 @@ private void customer(String message) {
 
 当达到最大重试次数后，如果仍然无法成功处理消息，消息会被发送到对应的死信队列中。对于死信队列的处理，既可以用 `@DltHandler` 处理，也可以使用 `@KafkaListener` 重新消费。
 
+## 问题积累：
+1. 消息积压：
+   a. 单partition并行消费的个数”来增加消费能力
+   单partiton并行消费，原理是客户端将消息从broker拉取(consumer-fetch-thread)下来后，将消费逻辑放到一个线程池中进行并行消费(consumer-consume-thread)，所以针对一个partition，拉取是有一个线程，但是拉取下来后消费是多个线程。
+   **单partiton并行消费线程数>=2，则partition内消费不再有序**
+   **如何保证顺序：**：
+   	向broker集群回复ack的时候，以连续offset进行回复，具体讲就是最小的如果业务没有回复ack，不进行向broker回复ack，最小的进行了回复ack，递增寻找最大的进行回复。
+   b. partition扩容
+
 ## 参考
 
 - Kafka 官方文档：<https://kafka.apache.org/documentation/>
