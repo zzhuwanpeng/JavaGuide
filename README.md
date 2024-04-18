@@ -31,7 +31,7 @@
 - [常见问题](https://javaguide.cn/javaguide/faq.html)
 
 **架构积累** : 
-- [架构](./docs/java/basis/arch.md)
+- [架构](./docs/arch/arch.md)
 - 
 ## Java
 
