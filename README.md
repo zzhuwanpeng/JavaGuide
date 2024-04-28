@@ -407,6 +407,9 @@ JVM 这部分内容主要参考 [JVM 虚拟机规范-Java8](https://docs.oracle.
 
 [高可用系统设计指南](./docs/high-availability/high-availability-system-design.md)
 
+## 微服务与DDD
+微服务和DDD (./docs/DDD/DDD.md)
+
 ### 冗余设计
 
 [冗余设计详解](./docs/high-availability/redundancy.md)
