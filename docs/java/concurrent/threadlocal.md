@@ -6,6 +6,9 @@ tag:
 ---
 
 > 本文来自一枝花算不算浪漫投稿， 原文地址：[https://juejin.cn/post/6844904151567040519](https://juejin.cn/post/6844904151567040519)。
+### 总结
+Thread中有一个threadlocalmap，这样每个线程都会有一个threadlocalmap，但对外暴露的是threadlocal
+这样线程之间由于threadlocalmap是不同的，保证了线程安全
 
 ### 前言
 
