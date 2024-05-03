@@ -4,6 +4,10 @@ category: Java
 tag:
   - Java集合
 ---
+##  总结
+每个节点有before，after，next的指针，每次put维护这些指针，取的是否按after遍历就好了
+当使用 LinkedHashMap 时，**迭代顺序会根据键值对的访问顺序而变化**，最近访问的键值对会移动到链表的尾部。
+
 
 ## LinkedHashMap 简介
 
