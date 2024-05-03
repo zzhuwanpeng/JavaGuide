@@ -8,7 +8,19 @@ tag:
 > 本文来自一枝花算不算浪漫投稿， 原文地址：[https://juejin.cn/post/6844904151567040519](https://juejin.cn/post/6844904151567040519)。
 ### 总结
 Thread中有一个threadlocalmap，这样每个线程都会有一个threadlocalmap，但对外暴露的是threadlocal
-这样线程之间由于threadlocalmap是不同的，保证了线程安全
+这样线程之间由于threadlocalmap是不同的，保证了线程安全。
+
+Threadlocal的使用时，有两条引用路径：
+1. 应用程序中定义的threadlocal变量，这里的threadlocal就是ThreadlocalMap中的key，这个key是使用软引用的（下次GC被回收），所有key不存在内存泄露。
+2. THread带有的ThreadlocalMap，Thread没有结束的话，这个map会持续存在，而这个引用是强引用，所有map里的value无法被回收。需要显式调用
+```java
+ThreadLocal<Session> threadLocal = new ThreadLocal<Session>();
+try {
+    threadLocal.set(new Session(1, "Misout的博客"));
+    // 其它业务逻辑
+} finally {
+    threadLocal.remove();
+}
 
 ### 前言
 
