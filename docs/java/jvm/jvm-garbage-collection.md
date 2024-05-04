@@ -91,6 +91,21 @@ MixedGC和FullGC
 * MetaSpace：
  OOM。所以关键原因就是 ClassLoader 不停地在内存中 load 了新的 Class ，一般这种问题都发生在动态类加载等情况上。
 
+如何设置大小:
+1. 现象：Full GC 比较频繁，且经历过一次 GC 之后 Old 区的变化比例非常大。
+解决： 一般情况下 Old 的大小应当为活跃对象的 2~3 倍左右, 因为如果yong太小，就会持续晋升到代码，而有些短期行为本可以在yongGC内消化.
+2. 现象：分配速率接近于晋升速率，对象晋升年龄较小。GC 日志中出现“Desired survivor size 107347968 bytes, new threshold 1(max 6)”等信息，说明此时经历过一次 GC 就会放到 Old 区。
+-- 解决：
+   偶发较大：通过内存分析工具找到问题代码，从业务逻辑上做一些优化。
+   一直较大：当前的 Collector 已经不满足 Mutator 的期望了，这种情况要么扩容 Mutator 的 VM，要么调整 GC 收集器类型或加大空间。
+3. CMS碎片化导致CMS垃圾回收退化为单线程，耗时极长（surivive空间不足，同时old或者huge连续空间不足）
+   --解决：
+    内存碎片：通过配置 -XX:UseCMSCompactAtFullCollection=true 来控制 Full GC的过程中是否进行空间的整理（默认开启，注意是Full GC，不是普通CMS GC），以及 -XX: CMSFullGCsBeforeCompaction=n 来控制多少次 Full GC 后进行一次压缩。
+    增量收集：降低触发 CMS GC 的阈值，即参数 -XX:CMSInitiatingOccupancyFraction 的值，让 CMS GC 尽早执行，以保证有足够的连续空间，也减少 Old 区空间的使用大小，另外需要使用 -XX:+UseCMSInitiatingOccupancyOnly 来配合使用，不然 JVM 仅在第一次使用设定值，后续则自动调整。
+   浮动垃圾：视情况控制每次晋升对象的大小，或者缩短每次 CMS GC 的时间，必要时可调节 NewRatio 的值。另外就是使用 -XX:+CMSScavengeBeforeRemark 在过程中提前触发一次 Young GC，防止后续晋升过多对象。
+   
+   
+
 
 
 
