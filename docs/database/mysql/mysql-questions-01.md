@@ -16,11 +16,15 @@ head:
 <!-- @include: @small-advertisement.snippet.md -->
 
 ## 总结
-mysql默认是RR级别。
-MVCC：
-在 RC 隔离级别下的 每次select 查询前都生成一个Read View (m_ids 列表)在 
-RR 隔离级别下只在事务开始后 第一次select 数据前生成一个Read View（m_ids 列表） -- **也就是说事务开启后，其他事务的提交不会影响当前事务的读结果**
+mysql默认是RR级别。    
+MVCC：     
++ 在 RC 隔离级别下的 每次select 查询前都生成一个Read View (m_ids 列表)
++ RR 隔离级别下只在事务开始后 第一次select 数据前生成一个Read View（m_ids 列表） -- **也就是说事务开启后，其他事务的提交不会影响当前事务的读结果** 
 
+幻读：  
++ 基于MVCC在RR下”第一次select 数据前生成一个Read View“，避免了一部分幻读。
++ 执行 select...for update/lock in share mode、insert、update、delete 等当前读，数据都是最新的。如果其它事务有插入新的记录，并且刚好在当前事务查询范围内，就会产生幻读！InnoDB 使用 Next-key Lockopen in new 
+  （这里主要是针对-按查询条件更新的情况）
 
 ## MySQL 基础
 
