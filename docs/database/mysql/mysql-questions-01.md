@@ -15,6 +15,13 @@ head:
 
 <!-- @include: @small-advertisement.snippet.md -->
 
+## 总结
+mysql默认是RR级别。
+MVCC：
+在 RC 隔离级别下的 每次select 查询前都生成一个Read View (m_ids 列表)在 
+RR 隔离级别下只在事务开始后 第一次select 数据前生成一个Read View（m_ids 列表） -- **也就是说事务开启后，其他事务的提交不会影响当前事务的读结果**
+
+
 ## MySQL 基础
 
 ### 什么是关系型数据库？
