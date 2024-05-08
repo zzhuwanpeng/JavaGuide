@@ -367,7 +367,7 @@ JVM 这部分内容主要参考 [JVM 虚拟机规范-Java8](https://docs.oracle.
 - [分布式 ID 设计指南](https://javaguide.cn/distributed-system/distributed-id-design.html)
 
 ### 分布式锁
-
+- [分布式锁自己整理](./docs/distributed/distributed-lock-mt.md)
 - [分布式锁介绍](https://javaguide.cn/distributed-system/distributed-lock.html)
 - [分布式锁常见实现方案总结](https://javaguide.cn/distributed-system/distributed-lock-implementations.html)
 
