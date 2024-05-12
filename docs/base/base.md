@@ -21,6 +21,10 @@ Sychronized和ReenterLock：
 核心线程中的线程，通过take() 阻塞，直到任务到来
 
 ## spring
+### springmvc
+filter ： 函数回调
+inteceptor： 反射
+
 ### IOC&AOP
 IOC: 管理调用引用对象的权利交给了spring
 AOP：带接口的是动态代理，不带接口的是GClib，aspectj是字节码实现
@@ -32,9 +36,23 @@ AOP：带接口的是动态代理，不带接口的是GClib，aspectj是字节�
 ## 存储
 
 ### mysql
+#### b树和b+树的区别
+B+树是B树的变种，所有的数据记录都存储在叶子节点，而内部节点只存储关键字，不存储数据记录，这样提高了查询效率。
+在B+树中，叶子节点通过指针连接成一个链表，便于范围查询和顺序访问，而B树则没有这样的结构。
+
+#### 事务隔离级别
+读未提交，读已提交，不可重复读，串行化
+第三个RR是默认的
+幻读通过(MVCC和间隙锁控制)
+MVCC：当前读和快照读
+
+
 #### redo undolog
 
 #### limit的性能
+
+### redis
+大key：
 
 
 ### es
