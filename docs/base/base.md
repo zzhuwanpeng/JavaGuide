@@ -106,7 +106,7 @@ API网关：Spring Cloud Gateway 或者 Netflix Zuul 提供了统一的服务入
 
 ### MQ
 MQ的架构（Kafka）：
-![kafka](../img/kafka.png)
+![kafka](./images/kafka.png)
 
 kafka和rocketmq的不同：
 
