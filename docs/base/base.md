@@ -20,6 +20,10 @@ Sychronized和ReenterLock：
 参数：核心线程数，最大线程数，阻塞队列，拒绝策略(AbortPolicy,直接拒接)，存活时间（非核心线程空闲等待时间），时间单位
 核心线程中的线程，通过take() 阻塞，直到任务到来
 
+### wait和sleep
+都会让出cpu，但sleep不释放锁，wait会释放锁
+
+
 ## spring
 ### springmvc
 filter ： 函数回调
@@ -73,6 +77,38 @@ rowkey的前缀设计非常重要
 用途：社交，好友关系（因为是稀疏矩阵），点赞，收藏数等等
 
 ## 分布式
+### 微服务设计 ，DDD
+
+
+### duboo
+
+六大核心功能：
+负载均衡：随机，轮询，最少活跃数，最短响应时间，一致性hash
+三个中心：注册中心(zk,nacos)，配置中心(nacos)，元数据中心
+支持失败重试，服务降级
+底层调用：Netty，Mina；上次传输协议：dubbo3：Trible（grpc）
+
+### MQ
+
+
+### 分布式基础组件
+#### 分布式锁
+redis，zk：
+redis： 高性能，set操作)+lua（(原子性）， requestId + 超时 + finnaly(释放锁)
+ZK： 一致性，zk临时节点，多了节点watch会产生惊群效应。
+
+#### 分布式ID
+雪花算法
+美团leaf：每次取一个段，然后双buffer
+美团分布式唯一ID的算法核心是Leaf——一种基于Snowflake算法改进的分布式ID生成系统。Leaf通过结合时间戳、工作机器ID和序列号来生成唯一的ID，确保在分布式环境中的唯一性和顺序性。此外，Leaf还提供了两种模式：Leaf-segment数据库号段模式和Leaf-snowflake时钟回拨优化模式，以适应不同的业务场景和性能需求。
+
+#### 分布式事务
+
+#### 分库分表
+
+
+## 大数据
+
 
 
 
