@@ -16,6 +16,17 @@ Sychronized和ReenterLock：
        ReenterLock是AQS实现，由state + 阻塞队列实现
 两者都是悲观锁，但ReenterLock提供了乐观锁的机制，通过tryLock()后，再判断版本号实现
 
+### 公平锁和非公平锁
+现成一般会先经历锁竞争，排队的阶段，这里是在加锁阶段体现是否是公平锁
+
+AQS队列中，已经有线程在排队了：
+公平锁：新线程排队
+非公平锁：先竞争所，再排队，这样如果竞争成功，就绕过排队直接获得锁
+
+### 如何避免死锁：
+注意加锁顺序，保证每个线程按同样的顺序加锁。
+设置超时时间。
+
 ### 线程池
 参数：核心线程数，最大线程数，阻塞队列，拒绝策略(AbortPolicy,直接拒接)，存活时间（非核心线程空闲等待时间），时间单位
 核心线程中的线程，通过take() 阻塞，直到任务到来
@@ -25,15 +36,36 @@ Sychronized和ReenterLock：
 ### wait和sleep
 都会让出cpu，但sleep不释放锁，wait会释放锁
 
+## JVM
+类加载器：目的是判断加载顺序，去哪个目录去加载
+顺序：AppClassLoader -> ExtClassLoader -> **BootstrapClassLoader(最先调用，最先调用的类加载器)**
+都是交给或代理给父加载器进行加载
 
 ## spring
 ### springmvc
 filter ： 函数回调
 inteceptor： 反射
 
+### spring启动过层
+BeanDefination  的MAP，先创建单例并
+
 ### IOC&AOP
 IOC: 管理调用引用对象的权利交给了spring
 AOP：带接口的是动态代理，不带接口的是GClib，aspectj是字节码实现
+
+spring事务的传播机制
+1. A方法调用B方法，事务如何传播，默认是：Require：没有就创建，有就加入
+   Require_new 如果事务存在，就挂起原有事务
+   Nested
+   等等
+   这个背不下来  TODO
+
+spring事务什么时候会失效：
+spring原理是AOP，失效的根本原因是这个AOP不起作用了：
+1. 方法调用自己，this.method,此时this是service对象本身，而不是代理对象
+2. 方法不是public方法，@Transaction 无法调用非public方法
+3. 异常被吃掉
+4. Bean没有被spring管理到
 
 
 ### 自动装配
@@ -215,6 +247,11 @@ ZK： 一致性，zk临时节点，多了节点watch会产生惊群效应
 3. producer执行本地事务，再发送实际消息，同时携带本地事务状态（三种状态：成功，失败，未知）
 4. 成功-consumer开始处理，失败-MQ丢弃消息， 未知
 5. 如果是未知，本地事务未执行完（half消息超时），定时询问生产者是否执行完成（15次）回查时检查本地事务的状态，返回本地事务给MQ，重复4步骤
+
+#### 分布式协议
+最小ID方案
+ZAB协议
+1. 投票给自己
 
 #### 分库分表
 
