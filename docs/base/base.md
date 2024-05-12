@@ -105,26 +105,64 @@ rowkey的前缀设计非常重要
 API网关：Spring Cloud Gateway 或者 Netflix Zuul 提供了统一的服务入口，对外暴露API，并且可以实现路由转发、权限校验、流量控制等功能。
 
 ### MQ
-MQ的架构（Kafka）：
+#### MQ的架构（Kafka）：
 ![](https://github.com/zzhuwanpeng/JavaGuide/blob/main/docs/img/kafka.png)
-https://zhuanlan.zhihu.com/p/671827061
+https://zhuanlan.zhihu.com/p/671827061  
+每个topic有多个patition，一个leader和多个follower，broker就是其中的一个leader或者follower
 
-kafka和rocketmq的不同：
+写入消息： topic，key value；生产环境一般是异步调用
+comsumer:  获取offset，消费，返回
 
+消息投递方式，kafka：
+at most once：至多一次，但不会重复
+at least once：至少一次，但可能重
+exactly once：正好一次
+如何保证exactly once，生产者使用事务消息，配置enable。idempotence为true，这样日志只记录一次，消费端幂等即可
+
+
+
+**消息存储**
+1. Kafka 每个Partition是一个独立的物理文件，消息直接从文件中读写。.index 文件记录了消息的偏移量（offset）和消息在 .log 文件中的物理位置（position）。这样，当需要查找特定偏移量的消息时，可以通过索引文件快速定位到消息所在的大概位置。
+2. RocketMQ 使用一个统一的CommitLog文件存储所有消息，ConsumeQueue存储消息的地址信息。
 
 #### 怎么保证消息不丢失
-消息丢失的情况：
+**消息丢失的情况**
 1. 跨网络的情况
-   producer发送丢失  --  ACK
-   broker主-> broker从（同步）
+   producer发送丢失  --  回调确认
+           kafka：发送通过实现Callback返回成功失败
+           rocketmq: 消息发送+回调，**事务消息**
+   leader-> follower（同步）
+           可以设置刷盘策略实现，先同步再返回或者先返回在通过从机器
+           RocketMq中还有Dleger集群，异步同步，master记录uncommit，当slave完成同步，master再设置为commit。
+           Kafka：允许消息少量丢失？？ ACK设置不同的策略
    写入消息到内存，到刷盘
-   comsumer拉取
+           Rocketmq：同步刷盘 || 异步写盘 -- 配置即可
+           Kafka：应该是一样的？？
+   consumer拉取，consumer异步执行，先提交offset，再执行事务，此时会丢消息；所以要使用同步机制。
+
+**消息的顺序保证**
+   RocketMQ：有机制保证消息的顺序性（MessageQueueSelector，选择队列发送，consumer注解MessageListerOrderly）
+   Kafka：没有顺序性的保证
+   MQ只保证局部有序，不保证全局有序；例如每个订单各个消息有序
+   具体实现：
+   RocketMQ：自带机制，MessageQueueSelector保证消息在同一个队列，consummer消费整个队列中的消息（锁队列）
+   Kafka：按patition进行分隔，消费者端topic下只对应一个消费者。
+
+**kafka和rocketmq**
+零拷贝：高速读写，内存映射，**不需要在用户态内存拷贝到内核态**
+如果没有零拷贝，操作实际是：用户写数据到硬件读取text.txt,读到内核空间，读到用户空间，再写入内核空间，再写入硬件
+零拷贝有两种方式：mmap,transer;
+mmap:直接获取映射，也就是内存地址，长度，大小等，这样文件不经过用户空间，直接在内核空间完成拷贝；
+transer：底层直接使用DMA，不同设备共同访问一个设备，cpu无需大量的中断
+RockeMQ：commitlog使用零拷贝，每次写1G
+Kafka：index日志使用零拷贝，其他无
 
 ### 分布式基础组件
 #### 分布式锁
 redis，zk：
 redis： 高性能，set操作)+lua（(原子性）， requestId + 超时 + finnaly(释放锁)
-ZK： 一致性，zk临时节点，多了节点watch会产生惊群效应。
+ZK： 一致性，zk临时节点，多了节点watch会产生惊群效应
+
 
 #### 分布式ID
 雪花算法
@@ -136,6 +174,12 @@ ZK： 一致性，zk临时节点，多了节点watch会产生惊群效应。
 等待时间追赶：如果检测到时钟回拨，系统不会立即生成新的ID，而是等待直到系统当前时间追赶到最后一次记录的时间戳。这个等待过程保证了在时间戳维度上ID的唯一性
 
 #### 分布式事务
+**事务消息**： rocketmq 保证执行本地事务和发送消息是原子性的，：
+1. 先发送一个half消息，此时consumer看不见这个消息，用于确保MQ是正常工作的
+2. MQ返回half消息后，
+3. producer执行本地事务，再发送实际消息，同时携带本地事务状态（三种状态：成功，失败，未知）
+4. 成功-consumer开始处理，失败-MQ丢弃消息， 未知
+5. 如果是未知，本地事务未执行完（half消息超时），定时询问生产者是否执行完成（15次）回查时检查本地事务的状态，返回本地事务给MQ，重复4步骤
 
 #### 分库分表
 
