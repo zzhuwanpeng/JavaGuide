@@ -41,7 +41,7 @@
 - 整体梳理
 - 
 ## Java
-  docs/base/base.md
+  - [整体知识](./docs/base/base.md)
 ### 基础
 
 **知识点/面试题总结** : (必看:+1: )：
