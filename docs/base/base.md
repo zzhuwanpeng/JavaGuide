@@ -105,7 +105,18 @@ rowkey的前缀设计非常重要
 API网关：Spring Cloud Gateway 或者 Netflix Zuul 提供了统一的服务入口，对外暴露API，并且可以实现路由转发、权限校验、流量控制等功能。
 
 ### MQ
+MQ的架构（Kafka）：
 
+kafka和rocketmq的不同：
+
+
+#### 怎么保证消息不丢失
+消息丢失的情况：
+1. 跨网络的情况
+   producer发送丢失  --  ACK
+   broker主-> broker从（同步）
+   写入消息到内存，到刷盘
+   comsumer拉取
 
 ### 分布式基础组件
 #### 分布式锁
