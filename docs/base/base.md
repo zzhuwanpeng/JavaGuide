@@ -41,6 +41,12 @@ AQS队列中，已经有线程在排队了：
 顺序：AppClassLoader -> ExtClassLoader -> **BootstrapClassLoader(最先调用，最先调用的类加载器)**
 都是交给或代理给父加载器进行加载
 
+## 网络
+IO多路复用
+单个线程监视多个链接，当有事件就绪，这个线程就去通知应用程序去处理。
+怎么避免服务端阻塞？-- 服务端把请求注册到一个selector的附路器上，然后循环select()就绪的channal（连接）就可以了
+常见的select poll epoll；select和poll都是轮询的方式，epoll是事件驱动的方式，来获取就绪的连接
+
 ## spring
 ### springmvc
 filter ： 函数回调
@@ -107,6 +113,22 @@ redis怎么和数据库保持一致
 
 **先操作数据库则可以直接保证最终一致性**
 先删库，再删缓存；但是存在删除失败的情况，采用MQ，解决删除失败的情况
+
+#### redis集群
+Redis主从和集群的区别？
+Redis主从： 
+        1个Master，多Slave，Master负责写，Slave负责读，读写分离；
+        通过sentinal进行监控Master是否宕机，重新选主；
+        无法扩展
+redis-Cluster
+        slot槽位，先通过key找到slot位置，然后去对应的节点读写
+        单个Master-1个或者多个Slave，Slave是冷备，不提供读
+        自动选主
+        容易扩展
+
+主从同步：先RDB全量快照，再增量写入（Redis默认是RDB的）
+        
+
 
 
 ### es
