@@ -57,8 +57,15 @@ IO多路复用
 filter ： 函数回调
 inteceptor： 反射
 
-### spring启动过层
-BeanDefination  的MAP，先创建单例并
+### springBean的初始化过程
+1. 通过构造器或工厂方法床架Bean的实例
+2. 通过注解或者配置配置Bean的属性  （**此时涉及三级缓存**） 三级缓存：1级：实例化好的bean（成熟bean），2级：尚未完成初始化的bean（临时bean）  3级：代理bean，保存的是代理bean的factory（不创建代理bean注入原始bean会产生错误）
+3. Aware接口
+4. BeanPostProcessor 前置方法before
+5. bean的初始化方法（init-method或者@PostConstruct注解）
+6. 如果Bean实现了InitailizingBean，调用其afterPropertiesSet方法
+7. BeanPostProcessor的后置方法，after
+
 
 ### IOC&AOP
 IOC: 管理调用引用对象的权利交给了spring
