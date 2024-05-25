@@ -346,6 +346,11 @@ crane
 1. 也是zk作为注册中心，完成对Manager的选主
 2. 通过Manager服务分配不同的slot到调度器，调度器通过对任务名取hash，判断某个任务是否由自己调度
 
+#### 全链路压测
+1. 服务建立唯一标识，System.currentTimeMills调用次数过多，会影响性能，采用1ms只调用一次
+2. http（nginxlog），rpc流量录制（实时录制）
+3. DB（影子表），redis，mq隔离
+
 
 ## 大数据
 
