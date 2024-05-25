@@ -134,8 +134,8 @@ Redis主从：
         无法扩展
 redis-Cluster
         slot槽位，先通过key找到slot位置，然后去对应的节点读写
-        单个Master-1个或者多个Slave，Slave是冷备，不提供读
-        自动选主
+        多组master-slave结构，每组Master-1个或者多个Slave，Slave是冷备，不提供读，组内自动选主
+        多组之间去中心化
         容易扩展
 
 主从同步：先RDB全量快照，再增量写入（Redis默认是RDB的）
@@ -297,9 +297,9 @@ ZAB协议
 2. 只在一台机器上执行，避免多个机器同时执行（相对单机定时任务而言）
 
 elastic-job
+
 ···java
 public class OrderProcessingJob extends SimpleJob {
-
     @Override
     public void execute(ShardingContext shardingContext) {
         int shardingItem = shardingContext.getShardingItem(); // 获取当前分片项
