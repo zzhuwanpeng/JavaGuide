@@ -289,6 +289,63 @@ ZAB协议
 
 #### 分库分表
 
+#### 分布式任务调度
+场景：
+
+1. 大数据量的分片执行
+
+2. 只在一台机器上执行，避免多个机器同时执行（相对单机定时任务而言）
+
+elastic-job
+···java
+public class OrderProcessingJob extends SimpleJob {
+
+    @Override
+    public void execute(ShardingContext shardingContext) {
+        int shardingItem = shardingContext.getShardingItem(); // 获取当前分片项
+        int shardingTotalCount = shardingContext.getShardingTotalCount(); // 获取分片总数
+        List<Long> orderIds = fetchOrderIds(shardingItem, shardingTotalCount); // 获取当前分片项要处理的订单ID列表
+
+        // 处理当前分片项的订单
+        for (Long orderId : orderIds) {
+            processOrder(orderId);
+        }
+    }
+
+    private List<Long> fetchOrderIds(int shardingItem, int shardingTotalCount) {
+        // 假设订单ID是连续的，您可以根据订单ID来分片
+        // 这里只是一个简单的示例，实际情况可能需要根据数据库中的数据来进行分片
+        long totalOrders = 10000000; // 假设有1000万订单
+        long ordersPerShard = totalOrders / shardingTotalCount; // 每个分片处理的订单数
+
+        long startOrderId = shardingItem * ordersPerShard;
+        long endOrderId = (shardingItem + 1) * ordersPerShard;
+        if (shardingItem == shardingTotalCount - 1) {
+            endOrderId = totalOrders;
+        }
+
+        // 根据订单ID范围获取订单列表，这里需要连接数据库并执行相应的查询
+        return queryOrderIdsFromDatabase(startOrderId, endOrderId);
+    }
+
+    private void processOrder(Long orderId) {
+        // 实际处理订单的逻辑
+    }
+
+    private List<Long> queryOrderIdsFromDatabase(long startOrderId, long endOrderId) {
+        // 实际查询数据库的逻辑
+        return new ArrayList<>();
+    }
+}
+
+elastic-job确保每个分片只在一个机器上执行。
+1. 任务分片，分片数量应当是2的倍数，便于扩容。
+2. 利用zk作为注册中心
+
+crane
+1. 也是zk作为注册中心，完成对Manager的选主
+2. 通过Manager服务分配不同的slot到调度器，调度器通过对任务名取hash，判断某个任务是否由自己调度
+
 
 ## 大数据
 
