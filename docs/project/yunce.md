@@ -19,9 +19,10 @@
    + iOS ： iproxy，wda
    + 提供的websocket模块
 
-+ Triproxy
-  +  独立拆分   
++ Triproxy 
+  + 独立拆分   
   + 三向代理，因为web层和agent层是多对多的关系，都需要pub-sub
+  + 改为无状态，做到的扩展
  
 + web层
   + websocket，租借展示
