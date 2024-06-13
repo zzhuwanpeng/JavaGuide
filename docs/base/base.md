@@ -9,7 +9,6 @@
 
 头插法死循环，使用尾插法，多线程下丢失节点，
         红黑树，算法稳定，链表log(n),链表的长度大于8 且数组的长度大于64时，此时链表会转为红黑树
-        容量是2的次幂，因为位运算取模效率高，hash函数更均匀，扩容效率高
         
 ### ConcurrentHashMap 
 
@@ -43,6 +42,80 @@ AQS队列中，已经有线程在排队了：
 都会让出cpu，但sleep不释放锁，wait会释放锁
 
 ## JVM
+JMM：实际上是定义了一套机制，来编写正确的开发程序。定义8种操作，happen-before机制等
+内存屏障：
+在Java内存模型（JMM）中，当我们说“插入一个屏障”时，这是指在程序执行过程中，编译器和处理器在特定位置自动加入特定的指令，这些指令被称为“内存屏障”（Memory Barriers）。
+这里volitile，synchronized，final都会插入内存屏障。
+```java
+public class ImmutableValue {
+    private final int value;
+
+    public ImmutableValue(int value) {
+        this.value = value;
+        // 构造函数结束处，隐含一个StoreStore屏障
+    }
+
+    public int getValue() {
+        return value;
+    }
+}
+//一旦value字段被写入，就会在构造函数结束时隐含地插入一个内存屏障（具体类型为StoreStore屏障）。这个屏障确保了value字段的赋值操作在任何后续的读操作之前完成，且不会与之重排序。
+```
+指令重排序的问题
+编译器和处理器可能会对指令进行重排序以优化性能，但这可能会在没有额外同步措施的情况下，导致其他线程看到未完全构造的对象。
+```java
+public class Example {
+    private int a;
+    private int b;
+
+    public Example() {
+        a = 1;
+        b = 2;
+    }
+
+    public int getA() {
+        return a;
+    }
+
+    public int getB() {
+        return b;
+    }
+}
+//假设在构造函数中对a和b的赋值发生了重排序，且b的赋值先于a执行。如果在这种情况下，构造函数还没有完成，另一个线程尝试访问这个部分构造的对象，它可能会看到a的默认值0而不是1，尽管在构造函数中a是在b之前赋值的。
+
+解决方法：（synchronized也可以解决）
+public class SafePublish {
+    private int a;
+    private int b;
+    private volatile int ready;
+
+    public SafePublish() {
+        a = 1;
+        b = 2;
+        ready = 1;  // 写入volatile字段，确保a和b的写入对所有线程可见
+    }
+
+    public boolean isReady() {
+        return ready == 1;
+    }
+
+    public int getA() {
+        if (isReady()) {
+            return a;
+        }
+        return -1;
+    }
+
+    public int getB() {
+        if (isReady()) {
+            return b;
+        }
+        return -1;
+    }
+}
+
+```
+
 ### 类加载
 类加载器：目的是判断加载顺序，去哪个目录去加载
 顺序：AppClassLoader -> ExtClassLoader -> **BootstrapClassLoader(最先调用，最先调用的类加载器)**
