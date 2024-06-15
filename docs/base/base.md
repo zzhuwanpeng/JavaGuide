@@ -12,7 +12,36 @@
         
 ### ConcurrentHashMap 
 
+单例模式
+```java
+public class Singleton {
+    // 使用 volatile 关键字确保多线程环境下的可见性和禁止指令重排
+    private static volatile Singleton instance;
+
+    // 私有构造函数，防止外部通过 new 创建实例
+    private Singleton() {
+    }
+
+    // 提供一个公共的静态方法，返回单例对象
+    public static Singleton getInstance() {
+        // 第一次检查，避免不必要的同步
+        if (instance == null) {
+            // 同步块，保证线程安全
+            synchronized (Singleton.class) {
+                // 第二次检查，确保只有第一个到达此处的线程能够创建实例
+                if (instance == null) {
+                    instance = new Singleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+```
+在 Spring 的上下文中，bean 的生命周期是由 Spring 容器控制的。容器负责同步和线程安全问题，因此在获取单例 bean 时，不需要使用双重检查锁定。
+
 ## 多线程
+
 ### 锁
 Sychronized和ReenterLock：
 功能上：ReentrantLock，可以实现公平锁，尝试加锁(trylock),超时，显示加锁释放，支持中断
@@ -138,7 +167,7 @@ filter ： 函数回调
 inteceptor： 反射
 
 ### springBean的初始化过程
-1. 通过构造器或工厂方法床架Bean的实例
+1. 通过构造器或工厂方法创建Bean的实例
 2. 通过注解或者配置配置Bean的属性  （**此时涉及三级缓存**） 三级缓存：1级：实例化好的bean（成熟bean），2级：尚未完成初始化的bean（临时bean）  3级：代理bean，保存的是代理bean的factory（不创建代理bean注入原始bean会产生错误）
 3. Aware接口
 4. BeanPostProcessor 前置方法before
@@ -146,6 +175,35 @@ inteceptor： 反射
 6. 如果Bean实现了InitailizingBean，调用其afterPropertiesSet方法
 7. BeanPostProcessor的后置方法，after
 
+三级缓存实现原理的核心类是DefaultSingletonBeanRegistry
+```java
+protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+		Object singletonObject = this.singletonObjects.get(beanName);
+		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+			synchronized (this.singletonObjects) {
+				singletonObject = this.earlySingletonObjects.get(beanName);
+				if (singletonObject == null && allowEarlyReference) {
+					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+					if (singletonFactory != null) {
+						singletonObject = singletonFactory.getObject();
+						this.earlySingletonObjects.put(beanName, singletonObject);
+						this.singletonFactories.remove(beanName);
+					}
+				}
+			}
+		}
+		return (singletonObject != NULL_OBJECT ? singletonObject : null);
+	}
+```
+
+### 作用域
+未指定scope属性，默认为singleton
+@Scope 注解在类上，描述spring容器如何创建Bean实例。
+（1）singleton： 表示在spring容器中的单例，通过spring容器获得该bean时总是返回唯一的实例；
+（2）prototype：表示每次获得bean都会生成一个新的对象；
+（3）request：表示在一次http请求内有效（只适用于web应用）；
+（4）session：表示在一个用户会话内有效（只适用于web应用）；
+（5）globalSession：表示在全局会话内有效（只适用于web应用）；
 
 ### IOC&AOP
 IOC: 管理调用引用对象的权利交给了spring
@@ -165,9 +223,16 @@ spring原理是AOP，失效的根本原因是这个AOP不起作用了：
 3. 异常被吃掉
 4. Bean没有被spring管理到
 
+## spring boot
+启动类标记：@SpringBootApplication注解标记该类。
+该注解包含了多个注解的组合，其中包括@EnableAutoConfiguration（自动装配）、@ComponentScan和@Configuration。
 
 ### 自动装配
 @EnableAutoConfiguration： 可以扫描第三方未标注注解的jar，通过扫描jar包下的META-INF/spring.factories
+
+### Tomcat是怎么启动的
+在创建Spring容器过程中，会利用**@CondtionalOnClass技术来判断当前classpath中是否存在Tomcat依赖**，如果存在则会生成一个启动Tomcat的Bean
+
 
 ## 存储
 
@@ -188,16 +253,54 @@ MVCC：当前读和快照读
 #### limit的性能
 
 ### redis
-数据类型和应用场景
-String    计数器，sessionid等
-hash   对象的各个属性
-列表    栈，队列，微信公众号的消息流等
-set 关注的人，点赞等
-zset  排行榜等
+#### 数据类型和应用场景
+String  |    计数器，sessionid等  |  原理  SDS
+hash   |  对象的各个属性 |  Dict，ziplist
+列表  |  栈，队列，微信公众号的消息流等 | LinkList/ziplist/quicklist
+set 关注的人，点赞等  |   dict/intset
+zset  排行榜等 | ziplist/skiplist
 
-redis怎么和数据库保持一致
+#### redis为什么选择单线程
+Redis的核心操作，包括接收客户端请求、解析请求、数据读写和发送数据，是在单个线程中完成的，使用了IO多路复用技术来有效地监听和处理来自多个客户端的连接。
+Redis本身并不是完全的单线程程序。它在启动时会创建一些后台线程来处理特定任务，比如关闭文件、AOF持久化，并且还有lazyfree线程专门用于异步释放内存，这样可以避免在执行某些命令时导致主线程的卡顿。
+Redis6.0引入多线程网络IO处理，提高性能表现。（随着网络硬件的性能提升，Redis 的性能瓶颈有时会出现在网络 I/O 的处理上。所以为了提高网络 I/O 的并行度，Redis 6.0 对于网络 I/O 采用多线程来处理。）
+RDB是使用子进程进行存盘，不是线程！
 
-先操作缓存：
+#### 缓存穿透：
+定义：缓存没有，直接查库
+原因：①缓存中的数据和数据库中的数据都被误删除了，导致缓存和数据库中都没有数据。②黑客恶意攻击，故意大量访问某些读取不存在数据的业务。
+解决：
+每次系统 A 从数据库中只要没查到，就写一个空值到缓存里去，然后设置一个过期时间。这样的话，下次有相同的 key 来访问的时候，在缓存失效之前，都可以直接从缓存中取数据。
+根据用户或者 IP 对接口进行限流。
+布隆过滤器，先查redis的布隆过滤器，没有直接返回错误，有的话再查缓存
+（一次coe：
+采用布隆过滤器做二级缓存进行第一层过滤（如未命中过滤器则直接返回false，如命中过滤器则穿透至redis查询），提升查询性能的同时降低redis的QPS，同时提升redis的命中率
+将原来的单个key分片，拆分为多个key来降低每个key中存储的数据量）
+
+#### 缓存雪崩（穿刺）
+缓存统一时间失效，缓存服务器宕机，都会造成数据库压力变大
+解决：
+设置不同的失效时间比如随机设置缓存的失效时间。
+缓存永不失效（不太推荐，实用性太差）。
+缓存预热，也就是在程序启动后或运行过程中，主动将热点数据加载到缓存中。
+
+#### 缓存击穿
+定义：当缓存中某个热点数据过期时，大量的请求访问了该热点数据，无法从缓存中读取，直接访问数据库。（这是缓存雪崩的一个子问题）
+原因：①缓存中某个热点数据过期。
+解决：
+互斥锁方案，等待第一个请求构建完缓存之后，再释放锁，进而其它请求才能通过该 key 访问数据。
+不给热点数据设置过期时间，由后台异步更新缓存，或者在热点数据准备要过期前，提前通知后台线程更新缓存以及重新设置过期时间。
+
+
+#### Redis的热键探测
+如果一个 key 的访问次数比较多且明显多于其他 key 的话，那这个 key 就可以看作是热键。
+探测方案：
+使用redis的命令redis-cli -p6379 --hotkeys 返回所有 key 的被访问次数。
+使用MONITOR监控redis的操作
+开源项目等
+
+#### redis怎么和数据库保持一致
+先操作缓存的问题：
         问题现象：两个线程，A线程修改数据库，先删除redis数据库，准备开始修改数据库；线程B查询，先查redis没有数据库，则加载老数据到redis；此时A线程再写数据库。出现不一致
         解决：
         删两次数据：弱一致性，线程A先删redis，再删数据库，再删redis；这样下次就查到新的数据了；这里需要有一定的延迟，否则还是会被线程B影响覆盖。
