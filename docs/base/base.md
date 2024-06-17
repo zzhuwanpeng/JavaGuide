@@ -475,7 +475,13 @@ exactly once：正好一次
 
 
 **消息存储**
-1. Kafka 每个Partition是一个独立的物理文件，消息直接从文件中读写。.index 文件记录了消息的偏移量（offset）和消息在 .log 文件中的物理位置（position）。这样，当需要查找特定偏移量的消息时，可以通过索引文件快速定位到消息所在的大概位置。
+1. Kafka
+- 一个Topic分别存储在不同的partition中
+- 一个partitioin对应着多个replica备份
+- 一个relica对应着一个Log
+- 一个Log对应多个LogSegment
+- 而在LogSegment中存储着log文件、索引文件、其它文件
+- 
 2. RocketMQ 使用一个统一的CommitLog文件存储所有消息，ConsumeQueue存储消息的地址信息。
 
 #### 怎么保证消息不丢失
@@ -504,7 +510,7 @@ exactly once：正好一次
 ** 提高性能，一个消费者多线程读取，怎么保证顺序**
 1. orderId按hash再取模，比如生产时partition分配了1,3,5；再按2取模，每个线程一个消息。
 2. 每个hash后的线程一个队列，统计一个计数器，批量提交
-3. 关闭自动提交，一批任务完成后，统一提交offset
+3. 关闭自动提交，一批任务完成后，统一提交offset（mafka基于滑动窗口实现）
 
 **kafka和rocketmq**
 零拷贝：高速读写，内存映射，**不需要在用户态内存拷贝到内核态**
