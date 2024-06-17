@@ -206,7 +206,18 @@ CMS：并发收集器，以获取最短回收停顿时间为目标，采用“�
 - 并发重置（Concurrent Reset）
 不停顿线程：在完成清除之后，GC 需要做一些清理工作来为下一次垃圾收集准备。这包括重置 GC 结构的状态等。这个阶段也是并发进行的
 
-G1：一种服务器端的垃圾收集器，应用在多处理器和大容量内存环境中，在实现高吞吐量的同时，尽可能地满足垃圾收集暂停时间的要求。
+G1：
+一种服务器端的垃圾收集器，应用在多处理器和大容量内存环境中，在实现高吞吐量的同时，尽可能地满足垃圾收集暂停时间的要求。
+标记整理算法
+- initial marking：需要stw，仅用于标记GC Root直接关联的对象，速度很快，附加一次Young GC
+- concurrent marking：并发进行GC Root Tracing
+- final marking：修正并发标记期间用户线程产生的对象变动，记录在线程本地的remember set logs里。最后把所有logs数据合并到remember set里，需要停止线程，但可以并行执行
+- live data counting and evaluation：对各个region的回收成本进行排序，制定回收计划
+
+当 GC 发生时，通过 RSet 找到引用当前 Region 的 Old Regions 的某个Card进行扫描，避免了扫描全部的 Old Regions，提高扫描效率。
+
+RSet和Card其实解决了不同维度的问题：前者解决回收老年代时需要扫描所有Old Region的问题，后者解决回收新生代出现跨代引用时需要扫描全部老年代的问题。可以把Card Table理解成内存分页的标识位，RSet理解成记录内存页关系的链表
+
 
 ZGC：JDK11 中推出的一款低延迟垃圾回收器，适用于大内存低延迟服务的内存管理和回收，SPECjbb 2015 基准测试，在 128G 的大堆下，最大停顿时间才 1.68 ms。停顿时间远胜于 G1 和 CMS。
 
