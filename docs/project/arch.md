@@ -76,7 +76,7 @@ akka：
 + akka的高并发的性能，异步非阻塞
 
 
-+ storm接收收听历史，存入redis
++ http -> nginx -> flume -> rocketmq -> storm -> redis   接收收听历史，存入redis
 
 
 
