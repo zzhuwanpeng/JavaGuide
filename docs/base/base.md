@@ -53,6 +53,9 @@ Sychronized和ReenterLock：
 
 乐观锁：CAS的方式都是乐观锁，AtomicStampedReference还可以解决ABA的问题
 
+### 并发类库
+https://pdai.tech/md/java/thread/java-thread-x-juc-overview.html#google_vignette
+
 ### Threadlocal
 每个线程的 ThreadLocalMap 独立管理该线程的 ThreadLocal 变量。不同线程的 ThreadLocalMap 是隔离的，不共享。
 内存泄露：
