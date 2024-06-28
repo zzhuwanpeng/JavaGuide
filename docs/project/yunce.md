@@ -35,6 +35,19 @@
   - zmq的消息通信机制灵活
     - 向上设备消息，通过广播通知到web层各个机器
     - 向下，用户操作通过triproxy，到provider进程，在分发到各个设备的线程
+   
+
+### 自动化原理
+Android:
+DC: adbkit 负责连接adbserver，并暴露湍口，
+slave ：启动appiumserver，连接到暴露的ip+port
+
+iOS:
+DC:   xcode负责编译wda到手机，
+对于短链路,appiumserver安装在DC上，iproxy转发wda的端口
+对于slave，appiumserver安装在VM上，iproxy转发wda的端口
+
+socat: 相当于直连，用于远程调试
     
  
 
