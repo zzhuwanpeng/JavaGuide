@@ -44,8 +44,10 @@ slave ：启动appiumserver，连接到暴露的ip+port
 
 iOS:
 DC:   xcode负责编译wda到手机，
-对于短链路,appiumserver安装在DC上，iproxy转发wda的端口
+对于短链路,appiumserver安装在DC上，iproxy转发appium（wda）的端口
+对于云测：
 对于slave，appiumserver安装在VM上，iproxy转发wda的端口
+DC：socat转发，通过uui确定唯一设备
 
 socat: 相当于直连，用于远程调试
     
